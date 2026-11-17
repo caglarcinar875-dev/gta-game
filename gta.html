@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cinar_tr | Ultra GTA Açık Dünya</title>
+  <style>
+    :root {
+      --bg:#05050b; --panel:#0f0f1d; --text:#fbfbfe; --muted:#8585a6;
+      --cyan:#00f3ff; --pink:#ff00b7; --line:#1e1e30;
+    }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:var(--bg); color:var(--text); font-family:'Segoe UI', sans-serif; overflow-x:hidden; }
+    .wrap { width:min(1200px, 90%); margin:auto; }
+    header { position:sticky; top:0; z-index:100; background:#05050be6; backdrop-filter:blur(16px); border-bottom:1px solid var(--line); }
+    nav { height:76px; display:flex; align-items:center; justify-content:space-between; }
+    .logo { font-weight:900; font-size:1.6rem; letter-spacing:1px; color:var(--text); text-decoration:none; }
+    .logo span { color:var(--cyan); text-shadow:0 0 20px var(--cyan); }
+    .links a { color:var(--muted); text-decoration:none; font-size:1rem; margin-left:32px; transition:0.3s; }
+    .links a:hover { color:var(--cyan); }
+
+    .hero { padding:100px 0 60px; text-align:center; background:radial-gradient(circle at 50% 20%, #1a0b36 0%, transparent 70%); }
+    .eyebrow { border:1px solid #00f3ff55; color:var(--cyan); padding:8px 20px; border-radius:40px; font-size:0.85rem; text-transform:uppercase; letter-spacing:3px; display:inline-block; margin-bottom:24px; box-shadow:0 0 20px #00f3ff22; }
+    h1 { font-size:clamp(3.2rem, 8vw, 6.5rem); font-weight:950; line-height:0.95; margin-bottom:24px; }
+    .glow { color:var(--cyan); text-shadow:0 0 30px #00f3ff88; }
+    .hero p { color:var(--muted); font-size:1.15rem; max-width:650px; margin:0 auto 36px; line-height:1.6; }
+    .btn { display:inline-block; padding:16px 38px; border-radius:16px; font-weight:900; text-decoration:none; transition:0.3s; cursor:pointer; font-size:1.1rem; }
+    .primary { background:var(--cyan); color:#05050b; box-shadow:0 0 40px #00f3ff66; }
+    .btn:hover { transform:translateY(-4px); filter:brightness(1.15); box-shadow:0 10px 40px var(--cyan); }
+
+    #game-section { padding:40px 0; }
+    #game-container { width:100%; height:780px; background:#020205; border:3px solid var(--cyan); border-radius:32px; position:relative; overflow:hidden; box-shadow:0 0 80px #00f3ff33; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+    #canvas-element { width:100%; height:100%; display:block; position:absolute; top:0; left:0; z-index:1; }
+
+    #loading-screen { position:absolute; top:0; left:0; width:100%; height:100%; background:#05050b; z-index:50; display:flex; flex-direction:column; justify-content:center; align-items:center; transition:opacity 0.5s; }
+    #loading-screen h2 { color:var(--cyan); font-size:2.3rem; margin-bottom:20px; text-shadow:0 0 20px var(--cyan); }
+    .spinner { width:50px; height:50px; border:5px solid var(--line); border-top-color:var(--cyan); border-radius:50%; animation:spin 1s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    .gta-hud { position:absolute; top:24px; left:24px; right:24px; pointer-events:none; display:flex; justify-content:space-between; align-items:flex-start; z-index:10; font-family:'Courier New', monospace; }
+    .hud-panel { background:#0f0f1de6; backdrop-filter:blur(12px); border:2px solid var(--cyan); padding:18px; border-radius:16px; color:#fff; min-width:230px; box-shadow:0 10px 30px rgba(0,0,0,0.5); }
+    .hud-title { font-size:0.75rem; text-transform:uppercase; color:var(--muted); letter-spacing:1.5px; margin-bottom:6px; font-weight:bold; }
+    .hud-val { font-size:2.2rem; font-weight:900; color:var(--cyan); text-shadow:0 0 15px var(--cyan); }
+    
+    .wanted-stars { display:flex; gap:8px; margin-top:10px; }
+    .star { font-size:1.7rem; color:#222; text-shadow:none; transition:0.3s; }
+    .star.active { color:#ffdd00; text-shadow:0 0 20px #ffdd00; }
+
+    .radio-box { text-align:right; width:280px; border-color:var(--pink); }
+    .radio-station { font-size:1.3rem; font-weight:900; color:var(--pink); text-shadow:0 0 15px var(--pink); }
+
+    .instructions { position:absolute; bottom:24px; left:50%; transform:translateX(-50%); background:#0f0f1de6; padding:14px 32px; border-radius:40px; border:2px solid var(--line); color:var(--text); font-size:0.95rem; text-align:center; pointer-events:none; z-index:10; box-shadow:0 10px 30px rgba(0,0,0,0.5); font-weight:600; }
+
+    #radio-popup { position:absolute; top:35%; left:50%; transform:translate(-50%, -50%); background:rgba(15,15,29,0.95); border-left:8px solid var(--pink); border-right:8px solid var(--pink); padding:22px 55px; color:#fff; font-family:sans-serif; font-size:2.2rem; font-weight:900; letter-spacing:3px; text-transform:uppercase; text-align:center; opacity:0; pointer-events:none; transition:opacity 0.4s, transform 0.4s; z-index:20; box-shadow:0 0 80px rgba(255,0,183,0.6); border-radius:8px; }
+    #radio-popup.show { opacity:1; transform:translate(-50%, -50%) scale(1.08); }
+
+    .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:32px; margin-top:40px; }
+    .card { background:linear-gradient(145deg, #181829, #0d0d17); border:2px solid var(--line); border-radius:24px; overflow:hidden; transition:0.4s; }
+    .card:hover { transform:translateY(-8px); border-color:var(--cyan); box-shadow:0 20px 50px #00f3ff22; }
+    .art { height:200px; display:grid; place-items:center; font-size:4.5rem; background:radial-gradient(circle, #00f3ff22 0%, transparent 70%); }
+    .card-body { padding:28px; }
+    .tag { color:var(--cyan); font-size:0.8rem; text-transform:uppercase; letter-spacing:3px; font-weight:900; }
+    .card h3 { margin:10px 0; font-size:1.6rem; }
+    .card p { color:var(--muted); line-height:1.6; font-size:1rem; }
+
+    footer { border-top:1px solid var(--line); padding:50px 0; color:var(--muted); text-align:center; font-size:0.95rem; }
+    @media(max-width:768px){.grid{grid-template-columns:1fr;}}
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+  <header><div class="wrap"><nav>
+    <a href="#" class="logo">cinar<span>_tr</span></a>
+    <div class="links">
+      <a href="#home">Ana Sayfa</a>
+      <a href="#game-section">Açık Dünya</a>
+      <a href="#about">Hakkımda</a>
+    </div>
+  </nav></div></header>
+
+  <main>
+    <section class="hero" id="home"><div class="wrap">
+      <span class="eyebrow">NEXT-GEN GRAPHICS EDITION</span>
+      <h1>ULTIMATE GTA<br/><span class="glow">AÇIK DÜNYA</span></h1>
+      <p>Işıklı gökdelenler, dinamik araç farları, neon sokak lambaları ve akıcı fizik motoruyla gece şehrini keşfet.</p>
+      <a href="#game-section" class="btn primary">Oyuna Dal</a>
+    </div></section>
+
+    <section id="game-section"><div class="wrap">
+      <div id="game-container">
+        <div id="loading-screen">
+          <h2>ŞEHİR YÜKLENİYOR...</h2>
+          <div class="spinner"></div>
+        </div>
+
+        <div class="gta-hud">
+          <div class="hud-panel">
+            <div class="hud-title">ANLIK HIZ</div>
+            <div class="hud-val" id="speed-display">0 KM/H</div>
+            <div class="wanted-stars" id="star-container">
+              <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+            </div>
+          </div>
+          <div class="hud-panel radio-box">
+            <div class="hud-title">RADYO KANALI [R]</div>
+            <div class="radio-station" id="radio-display">SYNTHWAVE FM</div>
+          </div>
+        </div>
+
+        <div id="radio-popup">RADYO DEĞİŞTİ</div>
+        <div class="instructions">WASD / Yön Tuşları: Sürüş | Shift: Nitro | R: Radyo Değiştir | C: Kamera</div>
+        <div id="canvas-element"></div>
+      </div>
+    </div></section>
+
+    <section id="games" class="wrap"><div style="padding:50px 0;">
+      <h2 style="font-size:2.3rem;">🎮 Oyun Modları</h2>
+      <div class="grid">
+        <article class="card"><div class="art">🏎️</div><div class="card-body"><span class="tag">Free Roam</span><h3>Serbest Sürüş</h3><p>Neon ışıklı caddelerde sınırları zorla.</p></div></article>
+        <article class="card"><div class="art">🚨</div><div class="card-body"><span class="tag">Hardcore</span><h3>Polis Kovalamacası</h3><p>Çakarlı polis ekipleri peşini bırakmayacak.</p></div></article>
+        <article class="card"><div class="art">📻</div><div class="card-body"><span class="tag">Immersive</span><h3>Radyo Sistemi</h3><p>4 farklı kanal ile gece atmosferini yaşa.</p></div></article>
+      </div>
+    </div></section>
+
+    <section id="about" class="wrap" style="padding:60px 0;"><div style="background:#0f0f1d; padding:50px; border-radius:32px; border:2px solid var(--line);">
+      <h2>Ben cinar_tr 👾</h2>
+      <p style="color:var(--muted); margin-top:16px; line-height:1.8; font-size:1.1rem;">Geliştirilmiş aydınlatma efektleri, prosedürel bina pencereleri ve optimize edilmiş Three.js motoru ile tarayıcıda yüksek grafikli açık dünya deneyimi.</p>
+    </div></div></section>
+  </main>
+
+  <footer><div class="wrap">© 2026 cinar_tr • Tüm Hakları Saklıdır.</div></footer>
+
+  <script>
+    const container = document.getElementById('canvas-element');
+    const loadingScreen = document.getElementById('loading-screen');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x04040a);
+    scene.fog = new THREE.FogExp2(0x060612, 0.0038);
+
+    const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 3000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.25;
+    container.appendChild(renderer.domElement);
+
+    const hemiLight = new THREE.HemisphereLight(0x3b82f6, 0x090914, 0.65);
+    scene.add(hemiLight);
+
+    const dirLight = new THREE.DirectionalLight(0x88ccff, 1.1);
+    dirLight.position.set(250, 450, 200);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 2048;
+    dirLight.shadow.mapSize.height = 2048;
+    dirLight.shadow.camera.near = 10;
+    dirLight.shadow.camera.far = 1200;
+    const d = 550;
+    dirLight.shadow.camera.left = -d;
+    dirLight.shadow.camera.right = d;
+    dirLight.shadow.camera.top = d;
+    dirLight.shadow.camera.bottom = -d;
+    dirLight.shadow.bias = -0.0005;
+    scene.add(dirLight);
+
+    const starGeo = new THREE.BufferGeometry();
+    const starCount = 1800;
+    const starPos = new Float32Array(starCount * 3);
+    for(let i = 0; i < starCount * 3; i += 3) {
+      starPos[i] = (Math.random() - 0.5) * 3500;
+      starPos[i+1] = 150 + Math.random() * 1200;
+      starPos[i+2] = (Math.random() - 0.5) * 3500;
+    }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+    const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 2.2, transparent: true, opacity: 0.85 });
+    const starField = new THREE.Points(starGeo, starMat);
+    scene.add(starField);
+
+    function createBuildingTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 128;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#0d0e1a';
+      ctx.fillRect(0, 0, 128, 256);
+
+      const colors = ['#00f3ff', '#ff00b7', '#ffdd55', '#ffffff', '#38bdf8'];
+      for(let y = 12; y < 244; y += 18) {
+        for(let x = 10; x < 118; x += 16) {
+          if(Math.random() > 0.35) {
+            ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+            ctx.globalAlpha = 0.4 + Math.random() * 0.6;
+            ctx.fillRect(x, y, 9, 11);
+          } else {
+            ctx.fillStyle = '#16182c';
+            ctx.globalAlpha = 1;
+            ctx.fillRect(x, y, 9, 11);
+          }
+        }
+      }
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      return tex;
+    }
+    const buildingTexture = createBuildingTexture();
+
+    const citySize = 2000;
+    const groundGeo = new THREE.PlaneGeometry(citySize, citySize);
+    const groundMat = new THREE.MeshStandardMaterial({ color: 0x08080f, roughness: 0.85 });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const roadGroup = new THREE.Group();
+    scene.add(roadGroup);
+    const roadWidth = 26;
+    const blocksize = 200;
+
+    const roadHorizGeo = new THREE.PlaneGeometry(citySize, roadWidth);
+    const roadVertGeo = new THREE.PlaneGeometry(roadWidth, citySize);
+    const roadMat = new THREE.MeshStandardMaterial({ color: 0x141521, roughness: 0.45, metalness: 0.3 });
+    const lineMat = new THREE.MeshBasicMaterial({ color: 0xffdd00 });
+
+    const poleGeo = new THREE.CylinderGeometry(0.18, 0.25, 9, 8);
+    const poleMat = new THREE.MeshStandardMaterial({ color: 0x222233, metalness: 0.8 });
+    const bulbGeo = new THREE.BoxGeometry(1.4, 0.25, 0.5);
+    const bulbMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
+
+    for(let i = -citySize/2; i <= citySize/2; i += blocksize + roadWidth) {
+      if(i === 0) continue;
+      const hRoad = new THREE.Mesh(roadHorizGeo, roadMat);
+      hRoad.rotation.x = -Math.PI/2; hRoad.position.set(0, 0.05, i);
+      hRoad.receiveShadow = true; roadGroup.add(hRoad);
+      
+      const hLine = new THREE.Mesh(new THREE.PlaneGeometry(citySize, 0.5), lineMat);
+      hLine.rotation.x = -Math.PI/2; hLine.position.set(0, 0.1, i);
+      roadGroup.add(hLine);
+
+      const vRoad = new THREE.Mesh(roadVertGeo, roadMat);
+      vRoad.rotation.x = -Math.PI/2; vRoad.position.set(i, 0.05, 0);
+      vRoad.receiveShadow = true; roadGroup.add(vRoad);
+
+      const vLineMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.5, citySize), lineMat);
+      vLineMesh.rotation.x = -Math.PI/2; vLineMesh.position.set(i, 0.1, 0);
+      roadGroup.add(vLineMesh);
+
+      for(let j = -citySize/2 + 100; j < citySize/2; j += 226) {
+        const pole = new THREE.Mesh(poleGeo, poleMat);
+        pole.position.set(i + roadWidth/2 + 1.5, 4.5, j);
+        const bulb = new THREE.Mesh(bulbGeo, bulbMat);
+        bulb.position.set(-0.6, 4.4, 0);
+        pole.add(bulb);
+        roadGroup.add(pole);
+      }
+    }
+
+    const roofMat = new THREE.MeshStandardMaterial({ color: 0x0b0c16, roughness: 0.6 });
+    for(let x = -citySize/2 + 50; x < citySize/2; x += blocksize + roadWidth) {
+      for(let z = -citySize/2 + 50; z < citySize/2; z += blocksize + roadWidth) {
+        if(Math.abs(x) < roadWidth*2 && Math.abs(z) < roadWidth*2) continue;
+        const w = blocksize - 42;
+        const d = blocksize - 42;
+        const h = 70 + Math.random() * 210;
+
+        const sideMat = new THREE.MeshStandardMaterial({
+          map: buildingTexture,
+          emissiveMap: buildingTexture,
+          emissive: 0xffffff,
+          emissiveIntensity: 0.85,
+          roughness: 0.3,
+          metalness: 0.5
+        });
+
+        const materials = [sideMat, sideMat, roofMat, roofMat, sideMat, sideMat];
+        const building = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), materials);
+        building.position.set(x + blocksize/2 - 20, h/2, z + blocksize/2 - 20);
+        building.castShadow = true;
+        building.receiveShadow = true;
+        scene.add(building);
+
+        if(h > 190) {
+          const neonRing = new THREE.Mesh(
+            new THREE.BoxGeometry(w + 1, 1.5, d + 1),
+            new THREE.MeshBasicMaterial({ color: Math.random() > 0.5 ? 0x00f3ff : 0xff00b7 })
+          );
+          neonRing.position.set(building.position.x, h - 2, building.position.z);
+          scene.add(neonRing);
+        }
+      }
+    }
+
+    const rampGeo = new THREE.BoxGeometry(30, 10, 50);
+    const rampMat = new THREE.MeshStandardMaterial({
+      color: 0xff00b7,
+      emissive: 0xff00b7,
+      emissiveIntensity: 0.4,
+      metalness: 0.6,
+      roughness: 0.2
+    });
+    const rampPositions = [ {x:0, z:120}, {x:240, z:-180}, {-200, z:240}, {x:400, z:400} ];
+    rampPositions.forEach(pos => {
+      const ramp = new THREE.Mesh(rampGeo, rampMat);
+      ramp.position.set(pos.x, 5, pos.z); ramp.rotation.x = -0.25;
+      ramp.castShadow = true; scene.add(ramp);
+    });
+
+    const carGroup = new THREE.Group();
+    scene.add(carGroup);
+
+    const chassisMat = new THREE.MeshStandardMaterial({ color: 0x00f3ff, metalness: 0.9, roughness: 0.12 });
+    const carBody = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.68, 4.3), chassisMat);
+    carBody.position.y = 0.7; carBody.castShadow = true; carGroup.add(carBody);
+
+    const glassMat = new THREE.MeshStandardMaterial({ color: 0x050508, roughness: 0.05, metalness: 0.95 });
+    const windshield = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.45, 1.6), glassMat);
+    windshield.position.set(0, 1.18, -0.35); carGroup.add(windshield);
+
+    const headLightMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const hlLeft = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.18, 0.1), headLightMat);
+    hlLeft.position.set(-0.72, 0.72, 2.16);
+    const hlRight = hlLeft.clone();
+    hlRight.position.x = 0.72;
+    carGroup.add(hlLeft, hlRight);
+
+    const spotLight = new THREE.SpotLight(0xdbeafe, 2.5, 95, Math.PI / 5, 0.4, 1);
+    spotLight.position.set(0, 1.1, 1.8);
+    spotLight.target.position.set(0, 0.2, 25);
+    carGroup.add(spotLight);
+    carGroup.add(spotLight.target);
+
+    const tailLightMat = new THREE.MeshBasicMaterial({ color: 0xff0033 });
+    const tlBar = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.15, 0.1), tailLightMat);
+    tlBar.position.set(0, 0.78, -2.16);
+    carGroup.add(tlBar);
+
+    const underglow = new THREE.PointLight(0x00f3ff, 2.2, 12);
+    underglow.position.set(0, 0.3, 0);
+    carGroup.add(underglow);
+
+    const wheelGeo = new THREE.CylinderGeometry(0.46, 0.46, 0.38, 24);
+    wheelGeo.rotateZ(Math.PI/2);
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111116, metalness: 0.6, roughness: 0.7 });
+    const wheelOffsets = [ [-1.12, 0.52, 1.35], [1.12, 0.52, 1.35], [-1.12, 0.52, -1.35], [1.12, 0.52, -1.35] ];
+    const wheels = [];
+    wheelOffsets.forEach(offset => {
+      const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+      wheel.position.set(offset[0], offset[1], offset[2]);
+      carGroup.add(wheel); wheels.push(wheel);
+    });
+
+    const policeCars = [];
+    const policeGeo = new THREE.BoxGeometry(2.0, 0.75, 4.2);
+    const policeMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, metalness: 0.85, roughness: 0.15 });
+    const sirenRedMat = new THREE.MeshBasicMaterial({ color: 0xff0033 });
+    const sirenBlueMat = new THREE.MeshBasicMaterial({ color: 0x0088ff });
+
+    for(let i = 0; i < 8; i++) {
+      const pGroup = new THREE.Group();
+      const pBody = new THREE.Mesh(policeGeo, policeMat);
+      pBody.position.y = 0.65;
+      pGroup.add(pBody);
+
+      const sRed = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.16, 0.25), sirenRedMat);
+      sRed.position.set(-0.35, 1.1, 0);
+      const sBlue = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.16, 0.25), sirenBlueMat);
+      sBlue.position.set(0.35, 1.1, 0);
+      pGroup.add(sRed, sBlue);
+
+      pGroup.position.set((Math.random()-0.5)*1000, 0, (Math.random()-0.5)*1000);
+      scene.add(pGroup);
+      policeCars.push({ mesh: pGroup, sRed, sBlue, speed: 1.9 + Math.random()*1.4 });
+    }
+
+    let speed = 0, maxSpeed = 2.9, accel = 0.055, friction = 0.97;
+    let steering = 0, steerSpeed = 0.036;
+    let cameraMode = 0;
+    let wantedLevel = 0;
+    
+    const keys = {};
+    window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+    window.addEventListener('keyup', e => keys[e.key.toLowerCase(
